@@ -78,6 +78,28 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #475569;
         }
+
+        /* Light Theme Overrides */
+        :root.light-mode .bg-slate-950 { background-color: #f8fafc !important; }
+        :root.light-mode .bg-slate-900 { background-color: #ffffff !important; }
+        :root.light-mode .bg-slate-900\/90 { background-color: rgba(255, 255, 255, 0.9) !important; }
+        :root.light-mode .bg-slate-800 { background-color: #f1f5f9 !important; }
+        :root.light-mode .bg-slate-700 { background-color: #e2e8f0 !important; }
+        :root.light-mode .border-slate-800 { border-color: #e2e8f0 !important; }
+        :root.light-mode .border-slate-700 { border-color: #cbd5e1 !important; }
+        :root.light-mode .text-slate-100 { color: #0f172a !important; }
+        :root.light-mode .text-white { color: #020617 !important; }
+        :root.light-mode .text-slate-200 { color: #1e293b !important; }
+        :root.light-mode .text-slate-300 { color: #334155 !important; }
+        :root.light-mode .text-slate-400 { color: #475569 !important; }
+        :root.light-mode .text-slate-500 { color: #64748b !important; }
+        :root.light-mode .divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]) { border-color: #e2e8f0 !important; }
+        :root.light-mode .leaflet-popup-content-wrapper,
+        :root.light-mode .leaflet-popup-tip { background-color: #ffffff !important; color: #0f172a !important; border-color: #e2e8f0 !important; }
+        :root.light-mode .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc !important; }
+        :root.light-mode .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1 !important; }
+        :root.light-mode .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8 !important; }
+        :root.light-mode input, :root.light-mode select { color: #0f172a !important; background-color: #f8fafc !important; border-color: #cbd5e1 !important; }
     </style>
 </head>
 <body class="h-full flex flex-col bg-slate-950 text-slate-100 overflow-x-hidden custom-scrollbar">
@@ -101,6 +123,14 @@
 
         <!-- Action Controls Header -->
         <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            
+            <!-- Theme Toggle Button -->
+            <button onclick="toggleTheme()" class="px-3.5 py-2 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg flex items-center gap-2 transition-all">
+                <i data-lucide="sun" id="themeIconSun" class="w-4 h-4 text-amber-400"></i>
+                <i data-lucide="moon" id="themeIconMoon" class="w-4 h-4 text-indigo-400 hidden"></i>
+                <span id="themeText">โหมดสว่าง</span>
+            </button>
+
             <!-- Upload Excel/CSV Button -->
             <button onclick="openUploadModal()" class="px-3.5 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-500 text-white rounded-lg shadow-lg shadow-teal-900/30 flex items-center gap-2 transition-all">
                 <i data-lucide="file-spreadsheets" class="w-4 h-4"></i>
@@ -525,10 +555,7 @@
 
             canvasRenderer = L.canvas({ padding: 0.5 });
 
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-                maxZoom: 16,
-                attribution: 'Tiles &copy; Esri'
-            }).addTo(mapInstance);
+            updateMapTheme(document.documentElement.classList.contains('light-mode') ? 'light' : 'dark');
 
             markersGroup = L.layerGroup().addTo(mapInstance);
         }
@@ -893,6 +920,9 @@
             if (!markersGroup) return;
             markersGroup.clearLayers();
 
+            const isLight = document.documentElement.classList.contains('light-mode');
+            const strokeColor = isLight ? '#ffffff' : '#0f172a';
+
             const itemsToRender = filteredData.slice(0, 1500);
             const validCoords = [];
 
@@ -908,7 +938,7 @@
                     renderer: canvasRenderer,
                     radius: (item.status === 'Deceased') ? 7 : 5,
                     fillColor: color,
-                    color: '#0f172a',
+                    color: strokeColor,
                     weight: 1,
                     opacity: 0.9,
                     fillOpacity: 0.8
@@ -941,6 +971,9 @@
 
         function renderEpiCurve() {
             const ctx = document.getElementById('epiCurveChart').getContext('2d');
+            const isLight = document.documentElement.classList.contains('light-mode');
+            const gridColor = isLight ? 'rgba(203, 213, 225, 0.5)' : 'rgba(51, 65, 85, 0.3)';
+            const tickColor = isLight ? '#64748b' : '#94a3b8';
 
             const dateCounts = {};
             filteredData.forEach(d => {
@@ -1000,12 +1033,12 @@
                     },
                     scales: {
                         x: {
-                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
-                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                            grid: { color: gridColor },
+                            ticks: { color: tickColor, font: { size: 10 } }
                         },
                         y: {
-                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
-                            ticks: { color: '#94a3b8', font: { size: 10 } },
+                            grid: { color: gridColor },
+                            ticks: { color: tickColor, font: { size: 10 } },
                             beginAtZero: true
                         }
                     }
@@ -1015,6 +1048,10 @@
 
         function renderDemographicChart() {
             const ctx = document.getElementById('demographicChart').getContext('2d');
+            const isLight = document.documentElement.classList.contains('light-mode');
+            const gridColor = isLight ? 'rgba(203, 213, 225, 0.5)' : 'rgba(51, 65, 85, 0.3)';
+            const tickColor = isLight ? '#64748b' : '#94a3b8';
+            const legendColor = isLight ? '#334155' : '#cbd5e1';
 
             const ageGroups = ['0-10', '11-20', '21-30', '31-40', '41-50', '51-60', '60+'];
             const maleCounts = [0, 0, 0, 0, 0, 0, 0];
@@ -1061,16 +1098,16 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { labels: { color: '#cbd5e1', font: { size: 11 } } }
+                        legend: { labels: { color: legendColor, font: { size: 11 } } }
                     },
                     scales: {
                         x: {
-                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
-                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                            grid: { color: gridColor },
+                            ticks: { color: tickColor, font: { size: 10 } }
                         },
                         y: {
-                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
-                            ticks: { color: '#94a3b8', font: { size: 10 } },
+                            grid: { color: gridColor },
+                            ticks: { color: tickColor, font: { size: 10 } },
                             beginAtZero: true
                         }
                     }
@@ -1080,6 +1117,9 @@
 
         function renderStatusPie() {
             const ctx = document.getElementById('statusPieChart').getContext('2d');
+            const isLight = document.documentElement.classList.contains('light-mode');
+            const legendColor = isLight ? '#334155' : '#cbd5e1';
+            const borderColor = isLight ? '#ffffff' : '#0f172a';
 
             const active = filteredData.filter(d => d.status === 'Active').length;
             const recovered = filteredData.filter(d => d.status === 'Recovered').length;
@@ -1101,7 +1141,7 @@
                             'rgba(239, 68, 68, 0.85)'
                         ],
                         borderWidth: 2,
-                        borderColor: '#0f172a'
+                        borderColor: borderColor
                     }]
                 },
                 options: {
@@ -1110,7 +1150,7 @@
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: '#cbd5e1', font: { size: 11 } }
+                            labels: { color: legendColor, font: { size: 11 } }
                         }
                     },
                     cutout: '65%'
@@ -1228,6 +1268,59 @@
         }
         function closeGithubGuideModal() {
             document.getElementById('githubGuideModal').classList.add('hidden');
+        }
+
+        // --- Theme Toggle Logic ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isLight = html.classList.toggle('light-mode');
+            
+            const sunIcon = document.getElementById('themeIconSun');
+            const moonIcon = document.getElementById('themeIconMoon');
+            const themeText = document.getElementById('themeText');
+            
+            if (isLight) {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                themeText.innerText = 'โหมดมืด';
+            } else {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                themeText.innerText = 'โหมดสว่าง';
+            }
+            
+            updateMapTheme(isLight ? 'light' : 'dark');
+            
+            if (filteredData && filteredData.length > 0) {
+                renderMapMarkers();
+                renderEpiCurve();
+                renderDemographicChart();
+                renderStatusPie();
+            }
+        }
+
+        let currentTileLayer = null;
+        function updateMapTheme(theme) {
+            if (!mapInstance) return;
+            
+            mapInstance.eachLayer(layer => {
+                if (layer instanceof L.TileLayer) {
+                    mapInstance.removeLayer(layer);
+                }
+            });
+            
+            const url = theme === 'light' 
+                ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+                : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+                
+            currentTileLayer = L.tileLayer(url, {
+                maxZoom: 16,
+                attribution: 'Tiles &copy; Esri'
+            }).addTo(mapInstance);
+            
+            if (markersGroup) {
+                markersGroup.bringToFront();
+            }
         }
     </script>
 </body>
